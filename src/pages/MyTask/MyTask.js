@@ -18,13 +18,13 @@ import AddIcon from "@mui/icons-material/Add";
 import { Modal } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
-import { apiRequest } from "../../interceptor/apiUtils";
-import { getUser } from "../Helper/getUser";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import EditIcon from "@mui/icons-material/Edit";
 import PreviewIcon from "@mui/icons-material/Preview";
 import { useNavigate } from "react-router-dom";
+import { apiRequest } from "../../interceptor/apiUtils";
+import { getUser } from "../../components/Helper/getUser";
 
 const style = {
   position: "absolute",
@@ -38,14 +38,13 @@ const style = {
   p: 4,
 };
 
-
-const Task = () => {
+const MyTask = () => {
   const [openModal, setOpenModal] = React.useState(false);
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
   const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const {
     register,
@@ -55,7 +54,7 @@ const Task = () => {
   } = useForm();
 
   const getAllTasks = () => {
-    apiRequest("get", "/task")
+    apiRequest("get", `/assignto/${user._id}`)
       .then((res) => {
         if (res?.data) {
           setTasks(res.data);
@@ -118,12 +117,13 @@ const Task = () => {
     updateTask(data, id);
   };
 
-  const detailsView = (id) =>{
-    navigate(`/task/${id}`)
-  }
+  const detailsView = (id) => {
+    navigate(`/task/${id}`);
+  };
 
   return (
     <>
+      <h2>My Task</h2>
       <Box sx={{ mb: 3 }}>
         <ButtonGroup
           disableElevation
@@ -176,8 +176,15 @@ const Task = () => {
                 </TableCell>
                 <TableCell align="right">
                   <Box display="flex" alignItems="center" justifyContent="end">
-                    <PreviewIcon onClick={() => detailsView(row?._id)} color="success" sx={{ fontSize: 30,cursor:'pointer' }} />
-                    <EditIcon color="primary" sx={{ fontSize: 30,cursor:'pointer' }} />
+                    <PreviewIcon
+                      onClick={() => detailsView(row?._id)}
+                      color="success"
+                      sx={{ fontSize: 30, cursor: "pointer" }}
+                    />
+                    <EditIcon
+                      color="primary"
+                      sx={{ fontSize: 30, cursor: "pointer" }}
+                    />
                   </Box>
                 </TableCell>
               </TableRow>
@@ -252,4 +259,4 @@ const Task = () => {
   );
 };
 
-export default Task;
+export default MyTask;

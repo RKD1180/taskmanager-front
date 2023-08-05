@@ -17,9 +17,9 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import LogoutIcon from '@mui/icons-material/Logout';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-
+import LogoutIcon from "@mui/icons-material/Logout";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PersonIcon from "@mui/icons-material/Person";
 
 const drawerWidth = 240;
 
@@ -73,7 +73,6 @@ const Layout = () => {
   const [open, setOpen] = React.useState(true);
   const navigate = useNavigate();
 
-
   const handleDrawerOpen = () => {
     setOpen(true);
   };
@@ -83,9 +82,14 @@ const Layout = () => {
   };
 
   const logout = () => {
-    localStorage.removeItem('user');
-    navigate("/")
-  }
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
+  const changeRoute = (path) => {
+    navigate(`${path}`);
+  };
+
   return (
     <>
       <Box sx={{ display: "flex" }}>
@@ -130,20 +134,28 @@ const Layout = () => {
           </DrawerHeader>
           <Divider />
           <List>
-            <ListItem disablePadding>
-              <ListItemButton>
+            <ListItem>
+              <ListItemButton onClick={() => changeRoute("/home")}>
                 <ListItemIcon>
                   <DashboardIcon />
                 </ListItemIcon>
                 <ListItemText primary={"Dashboard"} />
               </ListItemButton>
             </ListItem>
-            <ListItem disablePadding>
+            <ListItem>
               <ListItemButton onClick={logout}>
                 <ListItemIcon>
                   <LogoutIcon />
                 </ListItemIcon>
                 <ListItemText primary={"Logout"} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem>
+              <ListItemButton onClick={() => changeRoute("/mytasks")}>
+                <ListItemIcon>
+                  <PersonIcon />
+                </ListItemIcon>
+                <ListItemText primary={"My Task"} />
               </ListItemButton>
             </ListItem>
           </List>
@@ -153,8 +165,6 @@ const Layout = () => {
           <Outlet />
         </Main>
       </Box>
-
-      
     </>
   );
 };

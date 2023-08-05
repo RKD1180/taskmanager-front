@@ -4,6 +4,8 @@ import Layout from "./components/DashBoard/Layout/Layout";
 import Home from "./pages/Home/Home";
 import SignUp from "./pages/SignUp/SignUp";
 import Protected from "./components/Protected/Protected";
+import TaskDetails from "./pages/TaskDetails/TaskDetails";
+import MyTask from "./pages/MyTask/MyTask";
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
           }
         >
           <Route path="/home" element={<Home />} />
+          <Route path="/mytasks" element={<MyTask />} />
+          <Route path="/task/:id" element={<TaskDetails />} />
         </Route>
       </Routes>
     </BrowserRouter>
