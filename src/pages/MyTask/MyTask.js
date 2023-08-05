@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -53,7 +53,7 @@ const MyTask = () => {
     formState: { errors },
   } = useForm();
 
-  const getAllTasks = () => {
+  const getAllTasks = useCallback(() => {
     apiRequest("get", `/assignto/${user._id}`)
       .then((res) => {
         if (res?.data) {
@@ -66,12 +66,12 @@ const MyTask = () => {
         });
         console.error("Error fetching data:", err);
       });
-  };
+  }, [user._id]);
 
   useEffect(() => {
     setUser(getUser());
     getAllTasks();
-  }, []);
+  }, [getAllTasks]);
 
   const onSubmit = (data) => {
     data = { ...data, createdBy: { name: user?.username, id: user?._id } };

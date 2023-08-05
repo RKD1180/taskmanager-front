@@ -91,7 +91,7 @@ const TaskDetails = () => {
     setUser(getUser());
     getTask();
     getUsers();
-  }, [getTask]);
+  }, [getTask, getUsers]);
 
   const onSubmit = (data) => {
     data = { ...data, createdBy: { name: user?.username, id: user?._id } };

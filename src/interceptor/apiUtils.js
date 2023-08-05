@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://taskmanager-back.vercel.app";
 
 // Global function to make API requests
 export const apiRequest = async (
