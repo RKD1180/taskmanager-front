@@ -6,6 +6,7 @@ import SignUp from "./pages/SignUp/SignUp";
 import Protected from "./components/Protected/Protected";
 import TaskDetails from "./pages/TaskDetails/TaskDetails";
 import MyTask from "./pages/MyTask/MyTask";
+import EditTask from "./pages/EditTask/EditTask";
 
 function App() {
   return (
@@ -21,7 +22,8 @@ function App() {
             </Protected>
           }
         >
-          <Route path="/home" element={<Home />} />
+          <Route path="/dashboard" element={<Home />} />
+          <Route path="/edit/:id" element={<EditTask />} />
           <Route path="/mytasks" element={<MyTask />} />
           <Route path="/task/:id" element={<TaskDetails />} />
         </Route>

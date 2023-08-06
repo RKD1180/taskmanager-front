@@ -21,10 +21,12 @@ import { ToastContainer, toast } from "react-toastify";
 import { apiRequest } from "../../interceptor/apiUtils";
 import { getUser } from "../Helper/getUser";
 import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import EditIcon from "@mui/icons-material/Edit";
 import PreviewIcon from "@mui/icons-material/Preview";
 import { useNavigate } from "react-router-dom";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import Menu from "@mui/material/Menu";
+import StatusDropdown from "../InputComponents/StatusDropdown";
 
 const style = {
   position: "absolute",
@@ -38,14 +40,13 @@ const style = {
   p: 4,
 };
 
-
 const Task = () => {
   const [openModal, setOpenModal] = React.useState(false);
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
   const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const {
     register,
@@ -118,13 +119,45 @@ const Task = () => {
     updateTask(data, id);
   };
 
-  const detailsView = (id) =>{
-    navigate(`/task/${id}`)
-  }
+  const detailsView = (id) => {
+    navigate(`/task/${id}`);
+  };
+
+  const editTask = (id) => {
+    navigate(`/edit/${id}`);
+  };
+
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const filterBy = (value) => {
+    if (value !== "all") {
+      apiRequest("get", `/task/status/${value}`)
+        .then((res) => {
+          if (res?.data) {
+            setTasks(res.data);
+          }
+        })
+        .catch((err) => {
+          toast.error(err?.response?.data?.error, {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+          console.error("Error fetching data:", err);
+        });
+      return;
+    }
+    getAllTasks();
+  };
 
   return (
     <>
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between" }}>
         <ButtonGroup
           disableElevation
           variant="contained"
@@ -135,6 +168,35 @@ const Task = () => {
             Add Task
           </Button>
         </ButtonGroup>
+        <h3>Total Task: {tasks.length}</h3>
+        <Button
+          display="flex"
+          items="center"
+          color="warning"
+          variant="outline"
+          aria-controls={open ? "basic-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? "true" : undefined}
+          onClick={handleClick}
+        >
+          <FilterListIcon />
+          Filter By Status
+        </Button>
+        <Menu
+          id="basic-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          MenuListProps={{
+            "aria-labelledby": "basic-button",
+          }}
+        >
+          <MenuItem onClick={() => filterBy("all")}>All</MenuItem>
+          <MenuItem onClick={() => filterBy("open")}>Open</MenuItem>
+          <MenuItem onClick={() => filterBy("inprogress")}>Inprogress</MenuItem>
+          <MenuItem onClick={() => filterBy("completed")}>Complete</MenuItem>
+          <MenuItem onClick={() => filterBy("rejected")}>Rejected</MenuItem>
+        </Menu>
       </Box>
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
@@ -160,24 +222,24 @@ const Task = () => {
                 <TableCell align="right">{row?.endDate}</TableCell>
                 <TableCell align="right">
                   <Box sx={{ m: 1, minWidth: 120 }}>
-                    <Select
-                      labelId="demo-simple-select-label"
-                      id="demo-simple-select"
-                      fullWidth
-                      defaultValue={row?.status}
+                    <StatusDropdown
+                      value={row?.status}
                       onChange={(e) => changeStatus(e.target.value, row?._id)}
-                    >
-                      <MenuItem value="open">Open</MenuItem>
-                      <MenuItem value="inprogress">Inprogress</MenuItem>
-                      <MenuItem value="completed">Completed</MenuItem>
-                      <MenuItem value="rejected">Rejected</MenuItem>
-                    </Select>
+                    />
                   </Box>
                 </TableCell>
                 <TableCell align="right">
                   <Box display="flex" alignItems="center" justifyContent="end">
-                    <PreviewIcon onClick={() => detailsView(row?._id)} color="success" sx={{ fontSize: 30,cursor:'pointer' }} />
-                    <EditIcon color="primary" sx={{ fontSize: 30,cursor:'pointer' }} />
+                    <PreviewIcon
+                      onClick={() => detailsView(row?._id)}
+                      color="success"
+                      sx={{ fontSize: 30, cursor: "pointer" }}
+                    />
+                    <EditIcon
+                      onClick={() => editTask(row?._id)}
+                      color="primary"
+                      sx={{ fontSize: 30, cursor: "pointer" }}
+                    />
                   </Box>
                 </TableCell>
               </TableRow>

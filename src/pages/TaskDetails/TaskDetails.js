@@ -7,6 +7,7 @@ import {
   TextField,
   Alert,
   Button,
+  Chip,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -21,9 +22,25 @@ import CardOverflow from "@mui/joy/CardOverflow";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
 import Modal from "@mui/material/Modal";
-import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 
-const filter = createFilterOptions();
+import OutlinedInput from "@mui/material/OutlinedInput";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import ListItemText from "@mui/material/ListItemText";
+import Select from "@mui/material/Select";
+import Checkbox from "@mui/material/Checkbox";
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
 
 const style = {
   position: "absolute",
@@ -42,11 +59,11 @@ const TaskDetails = () => {
   const [task, setTask] = useState(null);
   const [user, setUser] = useState(null);
   const [comments, setComments] = useState([]);
+  const [assigneeUser, setAssigneeUser] = useState([]);
 
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const [value, setValue] = React.useState(null);
   const [users, setUsers] = useState([]);
 
   const {
@@ -112,13 +129,12 @@ const TaskDetails = () => {
         console.error("Error fetching data:", err);
       });
   };
-
-  const selectUser = (e) => {
-    console.log(
-      "🚀 ~ file: TaskDetails.js:117 ~ selectUser ~ e,value:",
-      e.target.value
-    );
-    return {};
+  const handleChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    const unique = value.filter((user) => !task.assignTo.some((newUser) => newUser._id === user._id));
+    setAssigneeUser([...unique]);
   };
 
   const getColor = () => {
@@ -131,6 +147,26 @@ const TaskDetails = () => {
       .padStart(2, "0")}${blue.toString(16).padStart(2, "0")}`;
 
     return colorCode;
+  };
+
+  const onAssignUserSubmit = () => {
+    const data = { users: assigneeUser };
+    apiRequest("post", `/task/${id}`, data)
+      .then((res) => {
+        if (res?.data) {
+          toast.success(res.message, {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+          getTask();
+          setAssigneeUser([]);
+        }
+      })
+      .catch((err) => {
+        toast.error(err?.response?.data?.error, {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+        console.error("Error fetching data:", err);
+      });
   };
 
   return (
@@ -198,73 +234,83 @@ const TaskDetails = () => {
                 {task?.status}
               </span>
             </Box>
-            <Box>
-              <Button variant="contained" onClick={handleOpen}>
-                Assign User
-              </Button>
-            </Box>
           </Paper>
         </Grid>
       </Grid>
       <Grid container spacing={2}>
         <Grid item xs={10}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Box sx={{ mt: 2 }}>
-              <TextField
-                fullWidth
-                id="outlined-basic"
-                {...register("comment", { required: true })}
-                label="Comment"
-                variant="outlined"
-                placeholder="Type Comment"
-                multiline
-                rows={2}
-                maxRows={4}
-              />
-              {errors.comment?.type === "required" && (
-                <Alert severity="error" sx={{ mt: 1 }}>
-                  Comment is required!
-                </Alert>
-              )}
-            </Box>
-            <Button type="submit" sx={{ mt: 2, mb: 2 }} variant="contained">
-              Comment
+          <Box display="flex" alignItems="center" gap={3}>
+            <h3>Assign To</h3>
+            <Button variant="contained" onClick={handleOpen}>
+              Assign User
             </Button>
-          </form>
-          <h2>Comments </h2>
-          {comments?.map((cmn, idx) => (
-            <Card
-              key={idx}
-              orientation="horizontal"
-              variant="outlined"
-              fullWidth
-              sx={{ mb: 2, mt: 2 }}
-            >
-              <CardOverflow>
-                <AspectRatio ratio="1" sx={{ width: 90 }}>
-                  <Stack direction="row" spacing={2}>
-                    <Avatar
-                      style={{ backgroundColor: `${getColor()}` }}
-                      alt={cmn?.createdBy?.name}
-                      src="/broken-image.jpg"
-                    >
-                      {cmn?.createdBy?.name?.charAt(0)}
-                    </Avatar>
-                  </Stack>
-                </AspectRatio>
-              </CardOverflow>
-              <CardContent>
-                <Typography
-                  fontWeight="md"
-                  textColor="success.plainColor"
-                  mb={0.5}
-                >
-                  {cmn?.createdBy?.name}
-                </Typography>
-                <Typography level="body-sm">{cmn?.comment}</Typography>
-              </CardContent>
-            </Card>
-          ))}
+          </Box>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+            {task?.assignTo.map((value,chiIdx) => (
+              <Chip key={chiIdx} label={value.username} />
+            ))}
+          </Box>
+        </Grid>
+        <Grid container spacing={2}>
+          <Grid item xs={10}>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <Box sx={{ mt: 2 }}>
+                <TextField
+                  fullWidth
+                  id="outlined-basic"
+                  {...register("comment", { required: true })}
+                  label="Comment"
+                  variant="outlined"
+                  placeholder="Type Comment"
+                  multiline
+                  rows={2}
+                  maxRows={4}
+                />
+                {errors.comment?.type === "required" && (
+                  <Alert severity="error" sx={{ mt: 1 }}>
+                    Comment is required!
+                  </Alert>
+                )}
+              </Box>
+              <Button type="submit" sx={{ mt: 2, mb: 2 }} variant="contained">
+                Comment
+              </Button>
+            </form>
+            <h2>Comments </h2>
+            {comments?.map((cmn, idx) => (
+              <Card
+                key={idx}
+                orientation="horizontal"
+                variant="outlined"
+                fullWidth
+                sx={{ mb: 2, mt: 2 }}
+              >
+                <CardOverflow>
+                  <AspectRatio ratio="1" sx={{ width: 90 }}>
+                    <Stack direction="row" spacing={2}>
+                      <Avatar
+                        style={{ backgroundColor: `${getColor()}` }}
+                        alt={cmn?.createdBy?.name}
+                        src="/broken-image.jpg"
+                      >
+                        {cmn?.createdBy?.name?.charAt(0)}
+                      </Avatar>
+                    </Stack>
+                  </AspectRatio>
+                </CardOverflow>
+                <CardContent>
+                  <Typography
+                    fontWeight="md"
+                    textColor="success.plainColor"
+                    mb={0.5}
+                  >
+                    {cmn?.createdBy?.name}
+                  </Typography>
+                  <Typography level="body-sm">{cmn?.comment}</Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </Grid>
         </Grid>
       </Grid>
 
@@ -283,67 +329,42 @@ const TaskDetails = () => {
           >
             Find User
           </Typography>
-          <Autocomplete
-            value={value}
-            fullWidth
-            onSelect={(option) => selectUser(option)}
-            onChange={(event, newValue) => {
-              if (typeof newValue === "string") {
-                setValue({
-                  title: newValue,
-                });
-              } else if (newValue && newValue.inputValue) {
-                // Create a new value from the user input
-                setValue({
-                  title: newValue.inputValue,
-                });
-              } else {
-                setValue(newValue);
-              }
-            }}
-            filterOptions={(options, params) => {
-              const filtered = filter(options, params);
-
-              const { inputValue } = params;
-              // Suggest the creation of a new value
-              const isExisting = options.some(
-                (option) => inputValue === option.title
-              );
-              if (inputValue !== "" && !isExisting) {
-                filtered.push({
-                  inputValue,
-                  title: `Add "${inputValue}"`,
-                });
-              }
-
-              return filtered;
-            }}
-            selectOnFocus
-            clearOnBlur
-            handleHomeEndKeys
-            id="free-solo-with-text-demo"
-            options={users}
-            getOptionLabel={(option) => {
-              // Value selected with enter, right from the input
-              if (typeof option === "string") {
-                return option;
-              }
-              // Add "xxx" option created dynamically
-              if (option.inputValue) {
-                return option.inputValue;
-              }
-              // Regular option
-              return option.username;
-            }}
-            renderOption={(props, option) => (
-              <li {...props}>{option.username}</li>
-            )}
-            sx={{ width: 300 }}
-            freeSolo
-            renderInput={(params) => (
-              <TextField {...params} label="Assign User" />
-            )}
-          />
+          <FormControl
+            sx={{ m: 1, width: 300 }}
+            onSubmit={handleSubmit(onAssignUserSubmit)}
+          >
+            <InputLabel id="demo-multiple-checkbox-label">Tag</InputLabel>
+            <Select
+              labelId="demo-multiple-checkbox-label"
+              id="demo-multiple-checkbox"
+              multiple
+              value={assigneeUser}
+              onChange={handleChange}
+              input={<OutlinedInput label="Tag" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                  {selected.map((value,valueIdx) => (
+                    <Chip key={valueIdx} label={value.username} />
+                  ))}
+                </Box>
+              )}
+              MenuProps={MenuProps}
+            >
+              {users.map((item, inde) => (
+                <MenuItem key={inde} value={item}>
+                  <Checkbox checked={assigneeUser.indexOf(item?._id) > -1} />
+                  <ListItemText primary={item?.username} />
+                </MenuItem>
+              ))}
+            </Select>
+            <Button
+              onClick={() => onAssignUserSubmit()}
+              sx={{ mt: 2, mb: 2 }}
+              variant="contained"
+            >
+              Assign
+            </Button>
+          </FormControl>
         </Box>
       </Modal>
 

@@ -19,12 +19,14 @@ import { Modal } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
 import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import EditIcon from "@mui/icons-material/Edit";
 import PreviewIcon from "@mui/icons-material/Preview";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../../interceptor/apiUtils";
 import { getUser } from "../../components/Helper/getUser";
+import StatusDropdown from "../../components/InputComponents/StatusDropdown";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import Menu from "@mui/material/Menu";
 
 const style = {
   position: "absolute",
@@ -53,8 +55,9 @@ const MyTask = () => {
     formState: { errors },
   } = useForm();
 
-  const getAllTasks = useCallback(() => {
-    apiRequest("get", `/assignto/${user._id}`)
+  const getMyTasks = useCallback(() => {
+    const data = getUser();
+    apiRequest("get", `/task/assignto/${data?._id}`)
       .then((res) => {
         if (res?.data) {
           setTasks(res.data);
@@ -66,12 +69,12 @@ const MyTask = () => {
         });
         console.error("Error fetching data:", err);
       });
-  }, [user._id]);
+  }, []);
 
   useEffect(() => {
     setUser(getUser());
-    getAllTasks();
-  }, [getAllTasks]);
+    getMyTasks();
+  }, [getMyTasks]);
 
   const onSubmit = (data) => {
     data = { ...data, createdBy: { name: user?.username, id: user?._id } };
@@ -81,7 +84,7 @@ const MyTask = () => {
           toast.success(res.message, {
             position: toast.POSITION.TOP_RIGHT,
           });
-          getAllTasks();
+          getMyTasks();
           reset();
           handleCloseModal();
         }
@@ -101,7 +104,7 @@ const MyTask = () => {
           toast.success(res.message, {
             position: toast.POSITION.TOP_RIGHT,
           });
-          getAllTasks();
+          getMyTasks();
         }
       })
       .catch((err) => {
@@ -121,10 +124,44 @@ const MyTask = () => {
     navigate(`/task/${id}`);
   };
 
+  const editTask = (id) => {
+    navigate(`/edit/${id}`);
+  };
+
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const filterBy = (value) => {
+    if (value !== "all") {
+      apiRequest("get", `/task/filter/${user?._id}/${value}`)
+        .then((res) => {
+          if (res?.data) {
+            setTasks(res.data);
+          }
+        })
+        .catch((err) => {
+          toast.error(err?.response?.data?.error, {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+          console.error("Error fetching data:", err);
+        });
+      return;
+    }
+    getMyTasks();
+  };
+
   return (
     <>
       <h2>My Task</h2>
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between" }}>
         <ButtonGroup
           disableElevation
           variant="contained"
@@ -135,6 +172,35 @@ const MyTask = () => {
             Add Task
           </Button>
         </ButtonGroup>
+        <h3>Total Task: {tasks.length}</h3>
+        <Button
+          display="flex"
+          items="center"
+          color="warning"
+          variant="outline"
+          aria-controls={open ? "basic-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? "true" : undefined}
+          onClick={handleClick}
+        >
+          <FilterListIcon />
+          Filter By Status
+        </Button>
+        <Menu
+          id="basic-menu"
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          MenuListProps={{
+            "aria-labelledby": "basic-button",
+          }}
+        >
+          <MenuItem onClick={() => filterBy("all")}>All</MenuItem>
+          <MenuItem onClick={() => filterBy("open")}>Open</MenuItem>
+          <MenuItem onClick={() => filterBy("inprogress")}>Inprogress</MenuItem>
+          <MenuItem onClick={() => filterBy("completed")}>Complete</MenuItem>
+          <MenuItem onClick={() => filterBy("rejected")}>Rejected</MenuItem>
+        </Menu>
       </Box>
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
@@ -160,18 +226,10 @@ const MyTask = () => {
                 <TableCell align="right">{row?.endDate}</TableCell>
                 <TableCell align="right">
                   <Box sx={{ m: 1, minWidth: 120 }}>
-                    <Select
-                      labelId="demo-simple-select-label"
-                      id="demo-simple-select"
-                      fullWidth
-                      defaultValue={row?.status}
+                    <StatusDropdown
+                      value={row?.status}
                       onChange={(e) => changeStatus(e.target.value, row?._id)}
-                    >
-                      <MenuItem value="open">Open</MenuItem>
-                      <MenuItem value="inprogress">Inprogress</MenuItem>
-                      <MenuItem value="completed">Completed</MenuItem>
-                      <MenuItem value="rejected">Rejected</MenuItem>
-                    </Select>
+                    />
                   </Box>
                 </TableCell>
                 <TableCell align="right">
@@ -182,6 +240,7 @@ const MyTask = () => {
                       sx={{ fontSize: 30, cursor: "pointer" }}
                     />
                     <EditIcon
+                      onClick={() => editTask(row?._id)}
                       color="primary"
                       sx={{ fontSize: 30, cursor: "pointer" }}
                     />

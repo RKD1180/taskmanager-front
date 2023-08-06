@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { styled, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -20,6 +20,7 @@ import ListItemText from "@mui/material/ListItemText";
 import LogoutIcon from "@mui/icons-material/Logout";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PersonIcon from "@mui/icons-material/Person";
+import { getUser } from "../../Helper/getUser";
 
 const drawerWidth = 240;
 
@@ -72,6 +73,7 @@ const Layout = () => {
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -90,6 +92,10 @@ const Layout = () => {
     navigate(`${path}`);
   };
 
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
+
   return (
     <>
       <Box sx={{ display: "flex" }}>
@@ -105,9 +111,11 @@ const Layout = () => {
             >
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" noWrap component="div">
-              Task Manager
-            </Typography>
+            <Box display="flex" justifyContent="space-between">
+              <Typography variant="h6" noWrap component="div">
+                Welcome: {user?.username}
+              </Typography>
+            </Box>
           </Toolbar>
         </AppBar>
         <Drawer
@@ -135,19 +143,11 @@ const Layout = () => {
           <Divider />
           <List>
             <ListItem>
-              <ListItemButton onClick={() => changeRoute("/home")}>
+              <ListItemButton onClick={() => changeRoute("/dashboard")}>
                 <ListItemIcon>
                   <DashboardIcon />
                 </ListItemIcon>
                 <ListItemText primary={"Dashboard"} />
-              </ListItemButton>
-            </ListItem>
-            <ListItem>
-              <ListItemButton onClick={logout}>
-                <ListItemIcon>
-                  <LogoutIcon />
-                </ListItemIcon>
-                <ListItemText primary={"Logout"} />
               </ListItemButton>
             </ListItem>
             <ListItem>
@@ -156,6 +156,14 @@ const Layout = () => {
                   <PersonIcon />
                 </ListItemIcon>
                 <ListItemText primary={"My Task"} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem>
+              <ListItemButton onClick={logout}>
+                <ListItemIcon>
+                  <LogoutIcon />
+                </ListItemIcon>
+                <ListItemText primary={"Logout"} />
               </ListItemButton>
             </ListItem>
           </List>
